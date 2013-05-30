@@ -1,46 +1,62 @@
 require 'spec_helper'
 
 describe Devise::MasqueradesController do
-  context 'with configured devise app' do
-    before { @request.env['devise.mapping'] = Devise.mappings[:user] }
+  shared_examples_for '#masquerade login' do
+    context 'with configured devise app' do
+      before { @request.env['devise.mapping'] = Devise.mappings[model_name] }
 
-    context 'when logged in' do
-      before { logged_in }
+      context 'when logged in' do
+        before { logged_in }
 
-      describe '#masquerade user' do
-        let(:mask) { create(:user) }
+        describe '#masquerade user' do
+          let(:mask) { create(model_name) }
 
-        before do
-          SecureRandom.should_receive(:base64).and_return("secure_key")
+          before do
+            SecureRandom.should_receive(:base64).and_return("secure_key")
 
-          get :show, :id => mask.to_param
-        end
+            get :show, :id => mask.to_param
+          end
 
-        it { should redirect_to("/?masquerade=secure_key") }
-      end
-    end
-
-    context 'when not logged in' do
-      before { get :show, :id => 'any_id' }
-
-      it { should redirect_to(new_user_session_path) }
-    end
-
-    describe 'back to the owner of the request' do
-      before { logged_in }
-
-      context 'and masquerade user' do
-        let(:mask) { create(:user) }
-
-        before { get :show, :id => mask.to_param }
-
-        context 'and back' do
-          before { get :back }
-
-          it { should redirect_to(masquerade_page) }
-          it { current_user.reload.should == @user }
+          it { should redirect_to("/?masquerade=secure_key") }
         end
       end
+
+      context 'when not logged in' do
+        before { get :show, :id => 'any_id' }
+
+        it { should redirect_to(new_user_session_path) }
+      end
+
+      describe 'back to the owner of the request' do
+        before { logged_in }
+
+        context 'and masquerade user' do
+          let(:mask) { create(model_name) }
+
+          before { get :show, :id => mask.to_param }
+
+          context 'and back' do
+            before { get :back }
+
+            it { should redirect_to(masquerade_page) }
+            it { current_user.reload.should == @user }
+          end
+        end
+      end
+    end
+  end
+
+  context 'with multiple models' do
+    describe 'user' do
+      let(:model_name) { :admin }
+
+      it_should_behave_like '#masquerade login'
+    end
+
+    describe 'admin' do
+      let(:model_name) { :admin }
+
+      it_should_behave_like '#masquerade login'
     end
   end
 

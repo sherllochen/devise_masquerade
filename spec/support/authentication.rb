@@ -5,8 +5,8 @@ module Authentication
     sign_in @user
   end
 
-  def current_user
-    controller.send(:current_user)
+  def current_user(model_name = :user)
+    controller.send(:"current_#{model_name}")
   end
 end
 
