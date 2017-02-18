@@ -18,7 +18,7 @@ class Devise::MasqueradesController < DeviseController
   end
 
   def show
-    self.resource = resource_class.to_adapter.find_first(:id => params[:id])
+    self.resource = resource_class.to_adapter.find_first(:uuid => params[:id])
 
     redirect_to(new_user_session_path) and return unless self.resource
 
